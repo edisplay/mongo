@@ -31,7 +31,6 @@
 #include "mongo/db/extension/sdk/assert_util.h"
 #include "mongo/db/extension/sdk/extension_factory.h"
 #include "mongo/db/extension/sdk/test_extension_factory.h"
-#include "mongo/util/testing_proctor.h"
 
 namespace sdk = mongo::extension::sdk;
 
@@ -132,40 +131,8 @@ public:
     AssertStageDescriptor() : sdk::AggStageDescriptor(kStageName) {}
 
     std::unique_ptr<sdk::AggStageParseNode> parse(mongo::BSONObj stageBson) const override {
-        _assertGlobalObservabilityContextIsNull();
         auto obj = sdk::validateStageDefinition(stageBson, kStageName);
         return std::make_unique<AssertParseNode>(kStageName, obj);
-    }
-
-private:
-    /**
-     * _assertGlobalObservabilityContextIsNull is a temporary test function that is used to confirm
-     * that this a test extension that is loaded into the server should never see a valid
-     * ObservabilityContext. Test extensions that are loaded into the server should be linked
-     * statically, and should never call setGlobalObservabilityContext. As a result, the global
-     * ObservabilityContext should always be null in an extension.
-     */
-    void _assertGlobalObservabilityContextIsNull() const {
-        /**
-         * TODO SERVER-115700: Unfortunately, when extensions are built as part of a unit test,
-         * they are not yet statically linked. This means that in unit tests, it's possible that
-         * we may have an observability context set due to the host and extension code
-         * dynamically linking against the same sdk. For now, disable this check when running
-         * from a unit test.
-         *
-         * Note: when an extension is statically linked, the TestingProctor is not initialized,
-         * because mongo::GlobalInitializers are never run. Therefore, in this case, it follows that
-         * the extension is likely being loaded into the server, so we can safely assert that we
-         * have a null ObservabilityContext.
-         */
-        if (mongo::TestingProctor::instance().isInitialized() &&
-            mongo::TestingProctor::instance().isEnabled()) {
-            return;
-        }
-        auto obsCtx = mongo::extension::getGlobalObservabilityContext();
-        tassert(11569602,
-                "Observability context was valid when it should not have been!",
-                obsCtx == nullptr);
     }
 };
 
