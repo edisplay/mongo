@@ -136,6 +136,7 @@
 #include "mongo/db/repl/storage_interface_impl.h"
 #include "mongo/db/repl/wait_for_majority_service.h"
 #include "mongo/db/replicated_fast_count/replicated_fast_count_enabled.h"
+#include "mongo/db/replicated_fast_count/replicated_fast_count_init.h"
 #include "mongo/db/replicated_fast_count/replicated_fast_count_manager.h"
 #include "mongo/db/replication_state_transition_lock_guard.h"
 #include "mongo/db/request_execution_context.h"
@@ -701,6 +702,19 @@ ExitCode _initAndListen(ServiceContext* serviceContext) {
     // available. As such, post startup actions will be performed elsewhere.
     if (!rss.getPersistenceProvider().shouldDelayDataAccessDuringStartup()) {
         FeatureCompatibilityVersion::afterStartupActions(startupOpCtx.get());
+    }
+
+    // Start up the replicated fast count manager thread on startup only if we are a standalone
+    // node. In replica sets, we start this up as part of step-up. Supported primarily for testing
+    // purposes.
+    if (!rss.getPersistenceProvider().shouldDelayDataAccessDuringStartup() &&
+        gFeatureFlagReplicatedFastCount.isEnabledUseLatestFCVWhenUninitialized(
+            VersionContext::getDecoration(startupOpCtx.get()),
+            serverGlobalParams.featureCompatibility.acquireFCVSnapshot()) &&
+        !replCoord->getSettings().isReplSet()) {
+        uassertStatusOK(createFastcountCollection(startupOpCtx.get()));
+        ReplicatedFastCountManager::get(startupOpCtx.get()->getServiceContext())
+            .startup(startupOpCtx.get());
     }
 
     if (gFlowControlEnabled.load()) {
