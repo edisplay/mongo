@@ -1,5 +1,5 @@
 /**
- *    Copyright (C) 2022-present MongoDB, Inc.
+ *    Copyright (C) 2025-present MongoDB, Inc.
  *
  *    This program is free software: you can redistribute it and/or modify
  *    it under the terms of the Server Side Public License, version 1,
@@ -27,40 +27,37 @@
  *    it in the license file.
  */
 
-#pragma once
+#include "mongo/db/auth/authentication_metrics.h"
 
-#include "mongo/bson/bsonobjbuilder.h"
-#include "mongo/util/modules.h"
-#include "mongo/util/tick_source.h"
-#include "mongo/util/timer.h"
+#include "mongo/bson/bsonobj.h"
+#include "mongo/db/stats/counters.h"
 
 namespace mongo {
-template <typename F>
-class ScopedCallbackTimer {
-public:
-    ScopedCallbackTimer(F onStop) : _onStop(std::move(onStop)) {}
 
-    ~ScopedCallbackTimer() {
-        _onStop(_timer.elapsed());
-    }
+void AuthMetricsRecorder::appendMetric(const BSONObj& metric) {
+    _appendedMetrics.append(metric);
+}
 
-private:
-    F _onStop;
-    Timer _timer;
-};
+BSONObj AuthMetricsRecorder::captureIngress() {
+    Duration<std::micro> _duration = _timer.elapsed();
 
-class MONGO_MOD_PUBLIC AuthMetricsRecorder {
-public:
-    AuthMetricsRecorder() : _timer(), _appendedMetrics() {}
-    void restart();
-    BSONObj captureIngress();
-    BSONObj captureEgress();
-    void appendMetric(const BSONObj& metric);
+    authCounter.incAuthenticationCumulativeTime(_duration.count());
 
-private:
-    Timer _timer;
-    BSONArrayBuilder _appendedMetrics;
-};
+    return BSON("conversation_duration"
+                << BSON("micros" << _duration.count() << "summary" << _appendedMetrics.done()));
+}
 
+BSONObj AuthMetricsRecorder::captureEgress() {
+    Duration<std::micro> _duration = _timer.elapsed();
+
+    // TODO SERVER-116025: Increment the egress version of authCounter
+
+    return BSON("conversation_duration"
+                << BSON("micros" << _duration.count() << "summary" << _appendedMetrics.done()));
+}
+
+void AuthMetricsRecorder::restart() {
+    _timer.reset();
+}
 
 }  // namespace mongo
