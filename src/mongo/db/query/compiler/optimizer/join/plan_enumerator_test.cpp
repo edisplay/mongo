@@ -527,7 +527,7 @@ TEST_F(JoinPlanEnumeratorTest, InitialzeLargeSubsets) {
 }
 
 DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, NoModes, "11391600") {
-    PerSubsetLevelEnumerationMode(std::vector<std::pair<size_t, PlanEnumerationMode>>{});
+    PerSubsetLevelEnumerationMode(std::vector<PerSubsetLevelEnumerationMode::SubsetLevelMode>{});
 }
 DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, FirstModeLevelNotZero, "11391600") {
     PerSubsetLevelEnumerationMode({{1, PlanEnumerationMode::ALL}});
@@ -556,6 +556,54 @@ DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, NonAscendingMode3, "11391600"
         {2, PlanEnumerationMode::CHEAPEST},
         {4, PlanEnumerationMode::ALL},
         {3, PlanEnumerationMode::CHEAPEST},
+    });
+}
+DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, HintedWithNoHints, "11391600") {
+    PerSubsetLevelEnumerationMode({
+        {0, PlanEnumerationMode::HINTED},
+    });
+}
+DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, HintedWithNoHints2, "11391600") {
+    PerSubsetLevelEnumerationMode({
+        {0, PlanEnumerationMode::CHEAPEST},
+        {5, PlanEnumerationMode::HINTED},
+    });
+}
+DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, HintedWithNoHints3, "11391600") {
+    PerSubsetLevelEnumerationMode({
+        {0, PlanEnumerationMode::CHEAPEST},
+        {.level = 3,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 1, .method = JoinMethod::HJ, .isLeftChild = true}},
+        {4, PlanEnumerationMode::HINTED},  // Bad hint.
+    });
+}
+DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, HintedWithRepeatedNode, "11391600") {
+    PerSubsetLevelEnumerationMode({
+        {0, PlanEnumerationMode::CHEAPEST},
+        {.level = 3,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 1, .method = JoinMethod::HJ, .isLeftChild = false}},
+        {.level = 4,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 2, .method = JoinMethod::HJ, .isLeftChild = true}},
+        {.level = 5,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 1, .method = JoinMethod::HJ, .isLeftChild = true}},  // Bad hint.
+    });
+}
+DEATH_TEST(PerSubsetLevelEnumerationModeDeathTest, HintedWithLevelSkip, "11391600") {
+    PerSubsetLevelEnumerationMode({
+        {0, PlanEnumerationMode::CHEAPEST},
+        {.level = 3,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 1, .method = JoinMethod::HJ, .isLeftChild = false}},
+        {.level = 4,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 2, .method = JoinMethod::HJ, .isLeftChild = true}},
+        {.level = 6,
+         .mode = PlanEnumerationMode::HINTED,
+         .hint = JoinHint{.node = 3, .method = JoinMethod::HJ, .isLeftChild = true}},  // Bad hint.
     });
 }
 
