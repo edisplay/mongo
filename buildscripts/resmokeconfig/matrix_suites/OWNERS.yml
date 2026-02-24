@@ -69,3 +69,6 @@ filters:
   - "generated_suites/sharded_collections_jscore_passthrough.yml":
     approvers:
       - 10gen/server-cluster-scalability
+  - "generated_suites/no_causal_consistency_replica_sets_kill_stepdown_terminate_jscore_passthrough.yml":
+    approvers:
+      - 10gen/server-replication-reviewers

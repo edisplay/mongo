@@ -63,3 +63,6 @@ filters:
   - "check_system_buckets_hook.yml":
     approvers:
       - 10gen/server-catalog-and-routing-ddl
+  - "no_causal_consistency.yml":
+    approvers:
+      - 10gen/server-replication-reviewers
