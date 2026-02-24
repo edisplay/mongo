@@ -54,7 +54,6 @@
 #include "mongo/db/storage/storage_options.h"
 #include "mongo/db/storage/storage_parameters_gen.h"
 #include "mongo/db/storage/storage_repair_observer.h"
-#include "mongo/db/storage/wiredtiger/wiredtiger_cache_eviction_opt_out_guard.h"
 #include "mongo/db/storage/wiredtiger/wiredtiger_cache_pressure_monitor.h"
 #include "mongo/db/storage/wiredtiger/wiredtiger_connection.h"
 #include "mongo/db/storage/wiredtiger/wiredtiger_cursor.h"
@@ -2916,10 +2915,6 @@ bool WiredTigerKVEngine::waitUntilUnjournaledWritesDurable(OperationContext* opC
 void WiredTigerKVEngine::waitUntilDurable(OperationContext* opCtx,
                                           Fsync syncType,
                                           UseJournalListener useListener) {
-
-    // Opt out of cache eviction when updating the oplog timestamp.
-    CacheEvictionOptOutGuard guard(*shard_role_details::getRecoveryUnit(opCtx));
-
     // For ephemeral storage engines, the data is "as durable as it's going to get".
     // That is, a restart is equivalent to a complete node failure.
     if (isEphemeral()) {
@@ -2997,9 +2992,7 @@ void WiredTigerKVEngine::waitUntilDurable(OperationContext* opCtx,
 
     // Initialize on first use.
     if (!_waitUntilDurableSession) {
-        // Open the session configured to opt out of cache eviction.
-        _waitUntilDurableSession =
-            std::make_unique<WiredTigerSession>(_connection.get(), nullptr, "cache_max_wait_ms=1");
+        _waitUntilDurableSession = std::make_unique<WiredTigerSession>(_connection.get());
     }
 
     // Flush the journal.
