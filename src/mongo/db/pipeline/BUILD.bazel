@@ -223,23 +223,13 @@ idl_generator(
     ],
 )
 
-idl_generator(
-    name = "name_expression_gen",
-    src = "name_expression.idl",
-    deps = [
-        "//src/mongo/db:basic_types_gen",
-    ],
-)
-
 mongo_cc_library(
     name = "aggregation_request_helper",
     srcs = [
         "aggregation_request_helper.cpp",
-        "name_expression_parser.cpp",
         "query_request_conversion.cpp",
         ":aggregate_command_gen",
         ":external_data_source_option_gen",
-        ":name_expression_gen",
     ],
     deps = [
         ":document_sources_idl",
