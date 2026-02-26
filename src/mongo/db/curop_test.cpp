@@ -361,16 +361,16 @@ TEST(CurOpTest, AdditiveMetricsShouldAggregateCursorMetrics) {
                                 true /* hasSortStage */,
                                 false /* usedDisk */,
                                 true /* fromMultiPlanner */,
-                                false /* fromPlanCache */,
-                                150 /* planningTimeMicros */,
-                                15 /* nDocsSampled */,
-                                9 /* cpuNanos */,
-                                3 /* numInterruptChecks */,
-                                1 /* nMatched */,
-                                0 /* nUpserted */,
-                                1 /* nModified */,
-                                0 /* nDeleted */,
-                                0 /* nInserted */);
+                                false /* fromPlanCache */);
+    cursorMetrics.setPlanningTimeMicros(150);
+    cursorMetrics.setNDocsSampled(15);
+    cursorMetrics.setCpuNanos(9);
+    cursorMetrics.setNumInterruptChecks(3);
+    cursorMetrics.setNMatched(1);
+    cursorMetrics.setNUpserted(0);
+    cursorMetrics.setNModified(1);
+    cursorMetrics.setNDeleted(0);
+    cursorMetrics.setNInserted(0);
     CardinalityEstimationMethods ceMethods1;
     ceMethods1.setHistogram(1);
     ceMethods1.setSampling(1);
@@ -432,16 +432,16 @@ TEST(CurOpTest, AdditiveMetricsShouldAggregateNegativeCpuNanos) {
                                 true /* hasSortStage */,
                                 false /* usedDisk */,
                                 true /* fromMultiPlanner */,
-                                false /* fromPlanCache */,
-                                12 /* planningTimeMicros */,
-                                15 /* nDocsSampled */,
-                                -1 /* cpuNanos */,
-                                3 /* numInterruptChecks */,
-                                1 /* nMatched */,
-                                0 /* nUpserted */,
-                                1 /* nModified */,
-                                0 /* nDeleted */,
-                                0 /* nInserted */);
+                                false /* fromPlanCache */);
+    cursorMetrics.setPlanningTimeMicros(12);
+    cursorMetrics.setNDocsSampled(15);
+    cursorMetrics.setCpuNanos(-1);
+    cursorMetrics.setNumInterruptChecks(3);
+    cursorMetrics.setNMatched(1);
+    cursorMetrics.setNUpserted(0);
+    cursorMetrics.setNModified(1);
+    cursorMetrics.setNDeleted(0);
+    cursorMetrics.setNInserted(0);
 
     additiveMetrics.aggregateCursorMetrics(cursorMetrics);
     ASSERT_EQ(additiveMetrics.cpuNanos, Nanoseconds(-2));
@@ -464,16 +464,16 @@ TEST(CurOpTest, AdditiveMetricsAggregateCursorMetricsTreatsNoneAsZero) {
                                 true /* hasSortStage */,
                                 false /* usedDisk */,
                                 true /* fromMultiPlanner */,
-                                false /* fromPlanCache */,
-                                100 /* planningTimeMicros */,
-                                15 /* nDocsSampled */,
-                                10 /* cpuNanos */,
-                                3 /* numInterruptChecks */,
-                                1 /* nMatched */,
-                                0 /* nUpserted */,
-                                1 /* nModified */,
-                                0 /* nDeleted */,
-                                0 /* nInserted */);
+                                false /* fromPlanCache */);
+    cursorMetrics.setPlanningTimeMicros(100);
+    cursorMetrics.setNDocsSampled(15);
+    cursorMetrics.setCpuNanos(10);
+    cursorMetrics.setNumInterruptChecks(3);
+    cursorMetrics.setNMatched(1);
+    cursorMetrics.setNUpserted(0);
+    cursorMetrics.setNModified(1);
+    cursorMetrics.setNDeleted(0);
+    cursorMetrics.setNInserted(0);
 
     additiveMetrics.aggregateCursorMetrics(cursorMetrics);
 
